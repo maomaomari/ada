@@ -2,73 +2,91 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define STD_SIZE 10000
+#include "buffer.h"
+
 #define STD_LINE_SIZE 512
 
-typedef struct line_s {
-	char* line;
-	struct line_s *pline, *nline;
-	int len;
-}line_t;
+buff_state_t state = { };
 
-line_t* head;
-line_t* tail;
-line_t *current_line;
-int size = 0;
-int pos = 0;
-
-line_t* init_list(void);
-line_t* add_list_f(FILE* file);
-line_t* add_list_b(FILE* file);
 
 int main(int argc, char** argv) {
 
+	if(argc < 2) {
+		printf("[ERROR] Incorrect usage, please enter 'ada <filename>' to use it.\n");
+		exit(-1);
+	}
+	
 	FILE* file = fopen(argv[1], "r");
 
-	char buf[STD_LINE_SIZE];
-	
-	head = init_list();
-	current_line = head;
-
-	fgets(current_line->line, 512, file);
-	current_line->len = strlen(current_line->line);
-	size++;
-	
-	while(!feof(file)) {
-		current_line = add_list_f(file);
+	if(file == NULL) {
+		printf("[ERROR] File does not exist or could not read it, please check if the file exists or there's proper access to it.\n");
+		exit(-2);
 	}
-
-	fclose(file);
 	
-	tail = current_line;
-	current_line = head;
+	char buf[STD_LINE_SIZE];
 
+	buffer_load(&state, file);
+
+	size_t fsize =  ftell(file);
+	
+	fclose(file);
+
+	printf("%zu\n", fsize);
+	/*
+	  TODO: IMPLEMENT
+	  - a : append line
+	  - i : insert line
+	  - c : change line with new
+	  - d : delete
+	  - p : print line DONE (no range)
+	  - n : move to line where n is a positive integer
+	  - w : write buffer to file
+	  - +/- : increment decrement line;
+	  - add $ for tail.
+
+	  TODO: THINGS TO CONSIDER LATER!
+	  - , : operator for ranges
+	  - s : operator for replacing text eg. s/old/new
+	  - g : global modifier
+	  - n : line number modifier
+	  - regex........ deus me ajude..
+	*/
+	
 	while(strcmp(buf, "q\n")){
 		fflush(stdin);
 		fgets(buf, STD_LINE_SIZE, stdin);
+		if(!strcmp(buf, ",p\n"))
+			buffer_print_all(&state);
+		if(!strcmp(buf, "p\n"))
+			printf("%s", state.current->line);
+		if(!strcmp(buf, "i\n"))
+			state.current = list_insert(&state, "teste\n");
+		if(!strcmp(buf, "+\n")){
+			if(state.current->n != NULL) {
+				state.current = state.current->n;
+				state.pos++;
+				printf("%s", state.current->line);
+			} else
+				printf("\x1b[31m?\x1b[39m\n");
+		}
+		if(!strcmp(buf, "-\n")){
+			if(state.current->p != NULL) {
+				state.current = state.current->p;
+				state.pos--;
+				printf("%s", state.current->line);
+			} else
+				printf("\x1b[31m?\x1b[39m\n");
+		}
+		if(!strcmp(buf, "$\n")) {
+			state.current = state.tail;
+			state.pos = state.size;
+		}
+		if(!strcmp(buf, "n\n"))
+			printf("%d\t%s",state.pos, state.current->line);
+		if(!strcmp(buf, ",n\n"))
+			buffer_print_all_ln(&state);
 	}
+
 	return 0;
 }
 
-line_t* init_list() {
-	line_t* list = malloc(sizeof(*list));
-	list->pline = NULL;
-	list->nline = NULL;
-	list->len = 0;
-	list->line = malloc(STD_LINE_SIZE);
-	return list;
-}
-
-line_t* add_list_f(FILE* file) {
-	line_t* tmp = malloc(sizeof(*tmp));
-	current_line->nline = tmp;
-	tmp->pline = current_line;
-	tmp->nline = NULL;
-	tmp->line = malloc(STD_LINE_SIZE);
-	fgets(tmp->line, STD_LINE_SIZE, file);
-	tmp->len= strlen(tmp->line);
-
-	size++;
-	
-	return tmp;
-}
