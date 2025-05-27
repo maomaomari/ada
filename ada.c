@@ -59,8 +59,8 @@ int main(int argc, char** argv) {
 			buffer_print_all(&state);
 		if(!strcmp(buf, "p\n"))
 			printf("%s", state.current->line);
-		if(!strcmp(buf, "i\n"))
-			state.current = list_insert(&state, "teste\n");
+		if(!strcmp(buf, "a\n"))
+			state.current = list_append(&state, "teste\n");
 		if(!strcmp(buf, "+\n")){
 			if(state.current->n != NULL) {
 				state.current = state.current->n;

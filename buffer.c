@@ -40,12 +40,17 @@ void buffer_load(buff_state_t* state, FILE* file) {
 
 	fgets(buf, STD_LINE_SIZE, file);
 	while(!feof(file)) {
-		state->current = list_insert(state, buf);
+		state->current = list_append(state, buf);
 		fgets(buf, STD_LINE_SIZE, file);
 	}
 	state->tail = state->current;
 	state->pos = state->size;
 	//	state->current = state->head;
+}
+
+int buffer_write_to_file(buff_state_t* state){
+
+	return 0;
 }
 
 line_t* list_init() {
@@ -57,7 +62,7 @@ line_t* list_init() {
 	return list;
 }
 
-line_t* list_insert(buff_state_t* state, char* str) {
+line_t* list_append(buff_state_t* state, char* str) {
 	line_t* tmp = malloc(sizeof(*tmp));
 
 	/* check for head/tail */
